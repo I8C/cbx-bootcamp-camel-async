@@ -1,6 +1,8 @@
 # Checkpoints
 
 These are snapshots of only the four exercise files, not copies of the applications.
+`SendRest.java`, `StockRest.java` and `StockPage.java` are shared supplied code and are not replaced.
+The sender snapshots use `.process(this::createEvent)` with that method in the same class.
 
 - `starter`: numbered TODO 1 (JMS send) and TODO 2 (SQL update) `.throwException(...)` placeholders. Compiles, but intentionally rejects sends/processing until edited.
 - `queue`: completed session 1; B instances compete for `stock.work`.

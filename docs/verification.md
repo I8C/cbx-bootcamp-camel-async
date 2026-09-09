@@ -29,8 +29,9 @@ Verified on 9 September 2026 on Windows 11 with Temurin Java 21, Git Bash, Maven
 | Git Bash preflight and queue checkpoint restoration | Passed |
 | Reset script recreates containers, clears XA logs, restores both stocks to 100 and event counts to zero | Passed |
 
-After the Camel REST/SQL changes: **2 tests, 0 failures, 0 errors** (workshop progression and guide/checkpoint consistency).
-The latest run took about 82 seconds, excluding Maven startup. Reports and individual application logs are under `verification/target/`.
+After separating the REST classes and extracting processor methods: **2 tests, 0 failures, 0 errors** (workshop progression and guide/checkpoint consistency).
+Both apps build, and the sender starter compiles together with its shared REST class.
+The latest run took about 59 seconds, excluding Maven startup. Reports and individual application logs are under `verification/target/`.
 The separate `bash verification/scripts-test.sh` checks also passed. Actual Docker Compose `version` and configuration validation passed through `containers.sh`.
 The migrated endpoints were checked over HTTP; the browser was not re-tested after this change.
 The explicit Spring JTA manager controls receive and commit; local JMS transactions must not also be enabled.

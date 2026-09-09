@@ -15,8 +15,8 @@ public class StockRoute extends RouteBuilder {
             .setHeader("change", simple("${body[change]}"))
             .setHeader("fail", simple("${body[fail]}"))
             .to("sql:INSERT INTO events (id, change) VALUES (:#id, :#change)")
-            // Exercise 2: update stock with Camel SQL (completed solution).
-            .to("sql:UPDATE stock SET quantity = quantity + :#change WHERE id = 1")
+            // TODO 2: replace the next line with the SQL update from the guide.
+            .throwException(IllegalStateException.class, "TODO 2: update stock")
             .log("SQL executed for ${header.id}; fail=${header.fail}")
             .choice().when(header("fail").isEqualTo(true))
                 .throwException(IllegalStateException.class, "Workshop failure after SQL; roll back!")

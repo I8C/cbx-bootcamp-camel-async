@@ -17,6 +17,9 @@ Open App A on port 8080 and B1 on 8081. Point to the sender, broker, consumer, d
 Stock starts at 100. App A sends a **change**, not the final stock value.
 The JavaScript only sends a REST request or reads a REST response; it never connects to JMS.
 Both endpoints use Camel REST DSL, and the database steps use Camel SQL.
+`SendRest.java` forwards the POST to `SendRoute.java`; `StockRest.java` forwards the GET to `StockPage.java`.
+The `direct:` endpoints connect these routes inside each app. REST definitions stay separate from JMS and SQL steps.
+Processor logic is in named methods below the routes: `createEvent` and `createStockResponse`.
 
 ### 10–25: connect the route
 
@@ -27,6 +30,7 @@ bash scripts/checkpoint.sh starter
 ```
 
 Type `YES` at the checkpoint prompt. It copies the starter files into the apps and tells you where **TODO 1** and **TODO 2** are.
+The supplied REST classes and stock page query are shared by all checkpoints and need no edits.
 If you see completed `.to(...)` steps instead, you are still looking at the queue/topic solution: load `starter` and reopen the source files.
 
 In `app-a/src/main/java/workshop/SendRoute.java`, find this exact line under **TODO 1**:

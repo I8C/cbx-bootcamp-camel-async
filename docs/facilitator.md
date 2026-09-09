@@ -6,6 +6,9 @@ Ten individual local installations; two sessions of 60 minutes. Allow setup time
 The only participant edits are two route lines in session 1 and two destination properties in session 2.
 Open code at a large font. Explain one statement at a time. The edits connect a Camel JMS send and a Camel SQL update.
 Keep the UI, the read-only page route and XA plumbing supplied.
+Read `SendRest` -> `SendRoute` for sending, and `StockRest` -> `StockPage` for polling.
+REST DSL is in its own class in each app; JMS consumption stays in `StockRoute`.
+Each `.process(this::methodName)` calls a short method below the route in the same class.
 Do not add an architecture layer, CSS library, product catalogue or generic event system.
 
 Session 1: introduction 10 min, routes/buffering 15, failure 20, recovery 10, recap 5.

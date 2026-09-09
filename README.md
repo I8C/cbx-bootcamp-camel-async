@@ -92,13 +92,16 @@ Read [facilitator notes](docs/facilitator.md) for timing, expected stock values,
 
 | File | Purpose |
 | --- | --- |
-| `app-a/.../SendRoute.java` | Camel REST POST -> validate -> JSON -> JMS -> HTTP 202 |
+| `app-a/.../SendRest.java` | Camel REST POST -> `direct:send` |
+| `app-a/.../SendRoute.java` | Validate -> JSON -> JMS -> HTTP 202; `createEvent` holds processor logic |
 | `app-b/.../StockRoute.java` | JMS -> JSON -> Camel SQL insert/update -> deliberate failure |
-| `app-b/.../StockPage.java` | Camel REST GET -> Camel SQL -> JSON response |
+| `app-b/.../StockRest.java` | Camel REST GET -> `direct:stock` |
+| `app-b/.../StockPage.java` | Camel SQL -> `createStockResponse` builds the response |
 | `app-b/src/main/resources/stock.sql` | One consistent stock/event snapshot for the page |
 | Each `META-INF/resources/index.html` | Plain browser controls and `fetch` |
 
 `app-b/.../setup/JmsSetup.java`, the lower half of its properties and `infra/` are supplied infrastructure.
+The REST classes are supplied for every checkpoint. `direct:` connects routes inside the same application.
 Do not expand them into participant coding exercises. There are no JAX-RS resource classes or hand-written JDBC connections in the apps.
 
 ## Facilitator verification
