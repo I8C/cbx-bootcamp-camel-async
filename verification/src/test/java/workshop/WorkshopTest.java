@@ -23,6 +23,22 @@ class WorkshopTest {
     final List<Path> logs = new ArrayList<>();
 
     @Test
+    void guideMatchesCheckpointEdits() throws Exception {
+        String guide = Files.readString(root.resolve("docs/participant-guide.md"));
+        for (String route : List.of("SendRoute", "StockRoute")) {
+            String starter = Files.readString(root.resolve("checkpoints/starter/" + route + ".java.txt"));
+            String solution = Files.readString(root.resolve("checkpoints/queue/" + route + ".java.txt"));
+            String placeholder = starter.lines().filter(line -> line.contains(".throwException(") && line.contains("TODO"))
+                .findFirst().orElseThrow().strip();
+            String replacement = solution.lines().filter(line -> line.contains(".to(\"{{stock.destination}}")
+                || line.contains(".to(\"sql:UPDATE")).findFirst().orElseThrow().strip();
+            assertTrue(guide.contains(placeholder), "Guide must show the exact starter line");
+            assertTrue(guide.contains(replacement), "Guide must show the exact solution line");
+            assertEquals(solution, Files.readString(root.resolve("checkpoints/topic/" + route + ".java.txt")));
+        }
+    }
+
+    @Test
     void workshopScenarios() throws Exception {
         // Refuse to disturb an existing workshop session.
         for (int port : List.of(8080, 8081, 8082)) {
@@ -32,10 +48,16 @@ class WorkshopTest {
             reset();
             start("a", false);
             start("b1", false);
+            assertEquals(100, quantity(8081));
+            assertEquals(0, stock(8081).get("events").size());
+            assertTrue(get(8081, "/stock").headers().firstValue("content-type").orElse("").contains("application/json"));
             String first = send(10, false);
             await(() -> quantity(8081) == 110, "successful database commit");
             assertTrue(stock(8081).get("events").toString().contains(first));
             assertEquals(400, post("{\"change\":0,\"fail\":false}").statusCode());
+            assertEquals(400, post("{\"change\":1001,\"fail\":false}").statusCode());
+            assertEquals(400, post("{broken json").statusCode());
+            assertEquals(400, post("null").statusCode());
 
             String failed = send(7, true);
             await(() -> dlqContains(failed), "failed message in DLQ");
@@ -100,6 +122,7 @@ class WorkshopTest {
         apps.put(name, builder.start());
         int port = name.equals("a") ? 8080 : name.equals("b1") ? 8081 : 8082;
         await(() -> {
+            if (!apps.get(name).isAlive()) throw new IllegalStateException(name + " exited; inspect " + log);
             try { return get(port, "/").statusCode() == 200; } catch (Exception e) { return false; }
         }, name + " startup; inspect " + log, 120);
     }
@@ -132,6 +155,7 @@ class WorkshopTest {
     String send(int change, boolean fail) throws Exception {
         var result = post("{\"change\":" + change + ",\"fail\":" + fail + "}");
         assertEquals(202, result.statusCode(), result.body());
+        assertTrue(result.headers().firstValue("content-type").orElse("").contains("application/json"));
         return json.readTree(result.body()).get("id").asText();
     }
 

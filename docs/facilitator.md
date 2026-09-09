@@ -4,7 +4,8 @@
 
 Ten individual local installations; two sessions of 60 minutes. Allow setup time before the sessions.
 The only participant edits are two route lines in session 1 and two destination properties in session 2.
-Open code at a large font. Explain one statement at a time. Keep UI, SQL and XA plumbing supplied.
+Open code at a large font. Explain one statement at a time. The edits connect a Camel JMS send and a Camel SQL update.
+Keep the UI, the read-only page route and XA plumbing supplied.
 Do not add an architecture layer, CSS library, product catalogue or generic event system.
 
 Session 1: introduction 10 min, routes/buffering 15, failure 20, recovery 10, recap 5.
@@ -27,7 +28,7 @@ If someone falls behind, stop their apps, select the appropriate checkpoint, reb
 ## Supplied transaction plumbing
 
 Camel JMS uses a Spring JMS listener container; a small `JtaTransactionManager` adapter delegates to Quarkus Narayana.
-The JMS component's explicit JTA manager begins the transaction **before receive**, not merely around the SQL method.
+The JMS component's explicit JTA manager begins the transaction **before receive**, covering both Camel SQL endpoints.
 Do not also enable Camel's local `transacted` flag: XA owns commit, and a second local commit conflicts with the JMS pool.
 Pooled JMS enlists the Artemis XA resource. The PostgreSQL XA datasource enlists the SQL connection.
 `CACHE_NONE` lets transaction-scoped JMS resources be acquired correctly. There is one consumer per instance.
@@ -35,9 +36,10 @@ Pooled JMS enlists the Artemis XA resource. The PostgreSQL XA datasource enlists
 On success, acknowledgement and SQL commit together. On an exception, both roll back.
 The events insert is before the stock update, so throwing after the update proves that **both** changes roll back.
 The event table uses the ID as primary key; this is not a general idempotent HTTP API or duplicate-event recovery solution.
-The page reads stock and event IDs in a consistent local read transaction, so a poll cannot show half of a concurrent commit.
+The page uses one Camel SQL query (`stock.sql`) for stock and event IDs, so each poll gets one database snapshot.
+The LEFT JOIN also returns the stock when the event list is empty.
 
-No Camel exception handler marks failure as handled. `noErrorHandler()` leaves broker delivery attempts in charge.
+The consumer does not mark failures as handled. `noErrorHandler()` leaves broker delivery attempts in charge.
 Artemis has `max-delivery-attempts=3` (initial delivery plus two retries), a 2000 ms delay and `DLQ` as dead-letter address.
 DLQ routing is the broker's action after repeated rollback, not a send within the failed database transaction.
 
@@ -68,8 +70,10 @@ Click the message ID to see the JSON body. Its event ID matches App A; the broke
 - **B2 shows B1:** use `bash scripts/run.sh b2`; this sets its instance name, port, database and transaction log directory.
 - **Both views behave like a queue:** verify the producer says `jms:topic:stock.events`, and B1/B2 consume distinct FQQNs; rebuild and restart.
 - **Failure changes committed stock:** stop the exercise; check that `JmsSetup`, pooled JMS XA and JDBC XA configuration are present. Run verification.
-- **Checkpoint seems ineffective:** packaged jars contain the previous code until `bash mvnw package` completes; stop and restart the apps.
-- **Starter sends fail:** intentional until both TODO processors are replaced. Do not send real exercise messages before completing them.
+- **Checkpoint seems ineffective:** type `YES` at the prompt and reopen the two source files. Only `starter` has TODO 1 and TODO 2.
+- **Missing/outdated package:** stop the apps, run `bash mvnw clean package` in the workshop root, wait for BUILD SUCCESS, then run the apps again.
+- **Starter sends fail:** intentional until both numbered `.throwException(...)` placeholders are replaced with the guide's `.to(...)` lines.
+- **Container commands:** `bash scripts/containers.sh up -d`, `stop`, `down` and `version` pass directly to the selected Compose engine; use `--help` for usage.
 
 ## References
 
@@ -77,6 +81,8 @@ Click the message ID to see the JSON body. Its event ID matches App A; the broke
 - [Camel Quarkus JMS and XA support](https://camel.apache.org/camel-quarkus/3.27.x/reference/extensions/jms.html)
 - [Quarkus transaction management](https://quarkus.io/guides/transaction)
 - [Quarkus XA datasource configuration](https://quarkus.io/guides/datasource)
+- [Camel REST DSL on Quarkus](https://camel.apache.org/camel-quarkus/3.27.x/reference/extensions/platform-http.html)
+- [Camel SQL with the Quarkus datasource](https://camel.apache.org/camel-quarkus/3.27.x/reference/extensions/sql.html)
 
 The kit pins Quarkus/Camel Quarkus 3.27.2, Artemis extension 3.9.0, pooled JMS 2.8.0 via the platform,
 Artemis broker 2.40.0, PostgreSQL 17.5, Maven 3.9.11 and Wrapper 3.3.4.

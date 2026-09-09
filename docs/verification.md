@@ -9,7 +9,8 @@ Verified on 9 September 2026 on Windows 11 with Temurin Java 21, Git Bash, Maven
 | Starter route templates compile with Java 21 | Passed |
 | Shell syntax and Docker Compose configuration | Passed |
 | Successful JMS delivery commits stock and event ID | Passed |
-| Invalid zero change is rejected | Passed |
+| Camel REST returns JSON and HTTP 202 after sending | Passed |
+| Zero, out-of-range, malformed JSON and null requests return HTTP 400 | Passed |
 | Failed SQL change rolls back stock and event ID | Passed |
 | Exactly three processing attempts, then DLQ | Passed |
 | Queue buffers while B is stopped | Passed |
@@ -18,13 +19,20 @@ Verified on 9 September 2026 on Windows 11 with Temurin Java 21, Git Bash, Maven
 | Durable subscriber catches up after restart | Passed |
 | Actual queue/topic checkpoint properties load correctly | Passed |
 | No duplicate local JMS commit / closed-session warnings | Passed |
-| Browser form sends +10; stock page changes from 100 to 110 | Passed |
-| Browser failure checkbox leaves stock at 110; JSON visible in DLQ | Passed |
+| Guide quotes exact starter placeholders and replacement lines | Passed |
+| Queue/topic route snapshots agree | Passed |
+| Container command/argument forwarding for Docker and Podman | Passed with command stubs |
+| Missing/stale build rejection and instance selection in run.sh | Passed with disposable files and command stubs |
+| All checkpoint copies and numbered starter TODOs | Passed |
+| Browser form sends +10; stock page changes from 100 to 110 | Passed before Camel REST migration; unchanged HTML |
+| Browser failure checkbox leaves stock at 110; JSON visible in DLQ | Passed before Camel REST migration; unchanged HTML |
 | Git Bash preflight and queue checkpoint restoration | Passed |
 | Reset script recreates containers, clears XA logs, restores both stocks to 100 and event counts to zero | Passed |
 
-The end-to-end test is one scenario covering the workshop progression: **1 test, 0 failures, 0 errors**.
-Its latest run took about 48 seconds, excluding Maven startup. Reports and individual application logs are under `verification/target/`.
+After the Camel REST/SQL changes: **2 tests, 0 failures, 0 errors** (workshop progression and guide/checkpoint consistency).
+The latest run took about 82 seconds, excluding Maven startup. Reports and individual application logs are under `verification/target/`.
+The separate `bash verification/scripts-test.sh` checks also passed. Actual Docker Compose `version` and configuration validation passed through `containers.sh`.
+The migrated endpoints were checked over HTTP; the browser was not re-tested after this change.
 The explicit Spring JTA manager controls receive and commit; local JMS transactions must not also be enabled.
 
 Podman is not installed on this machine, so its runtime was **not tested**. The scripts select `podman compose`
@@ -32,5 +40,5 @@ when `CONTAINER_ENGINE=podman`; a working Compose provider and Podman machine ar
 Crash recovery configuration is supplied, but abrupt-crash/XA recovery testing is outside the verified workshop scenarios.
 Some extension deprecation/recorder warnings appear at build time; they do not prevent the tested applications from starting.
 
-To reproduce: start containers, stop all apps, run `bash mvnw package`, then `bash mvnw -f verification/pom.xml test`.
+To reproduce: select a solution checkpoint, start containers, stop all apps, run `bash mvnw clean package`, then `bash mvnw -f verification/pom.xml test` and `bash verification/scripts-test.sh`.
 The tests reset workshop queue/database contents before and after running. Do not run them during a participant exercise.

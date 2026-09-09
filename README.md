@@ -5,9 +5,10 @@ Two one-hour sessions for ten people, each running their own system.
 There is one product, two tiny applications, no frontend framework and no service/repository layers.
 
 ```text
-App A: browser -> REST -> Camel -> Artemis
+App A: browser -> Camel REST -> Camel JMS -> Artemis
                                     |
-                     App B: Camel -> its database -> REST -> its browser
+                     App B: Camel JMS -> Camel SQL -> its database
+                            browser <- Camel REST + Camel SQL
 ```
 
 App A sends a change, such as `+10`. App B applies it to its own stock, initially 100.
@@ -26,7 +27,7 @@ export CONTAINER_ENGINE=podman
 
 bash scripts/check.sh
 bash scripts/containers.sh pull
-bash mvnw -B package
+bash mvnw -B clean package
 bash scripts/containers.sh up -d
 bash scripts/containers.sh logs --tail 20 artemis
 ```
@@ -37,7 +38,13 @@ Ensure `java -version` and `bash mvnw -version` both report Java 21. If needed, 
 
 ## Run the complete queue example
 
-Open separate Git Bash terminals in this folder:
+First build from this folder (also required after changing Java, HTML, SQL, properties or checkpoints):
+
+```bash
+bash mvnw clean package
+```
+
+Wait for **BUILD SUCCESS**, then open separate Git Bash terminals in this folder:
 
 ```bash
 # Terminal 1
@@ -54,15 +61,30 @@ bash scripts/run.sh b2
 - [Artemis console](http://localhost:8161/console): username `workshop`, password `workshop`
 
 Send `10`: B1 becomes 110. The sender confirms **queued**, not processed.
+`run.sh` only launches a packaged app; it does not build. It checks for a missing package and files newer than the package,
+and prints `bash mvnw clean package` when a rebuild is needed. No rebuild is needed for a stop/restart without edits.
 Stop each Java application with Ctrl+C in its terminal. `bash scripts/containers.sh stop` preserves data.
 `bash scripts/reset.sh` explicitly deletes this workshop's container volumes and local transaction logs; stop all apps first.
+
+`containers.sh` accepts Compose commands and forwards all following arguments:
+
+```bash
+bash scripts/containers.sh up -d
+bash scripts/containers.sh stop
+bash scripts/containers.sh down
+bash scripts/containers.sh version
+```
+
+`stop` preserves containers and data; `down` removes containers but preserves named data volumes.
+`bash scripts/containers.sh --help` (or no arguments) displays usage. Neither this script nor reset builds Java.
 
 ## Follow the exercises
 
 Read [the participant guide](docs/participant-guide.md). The checkout initially contains the **queue solution**, ready to demonstrate.
 Use `bash scripts/checkpoint.sh starter` to prepare the guided edits; `queue` and `topic` restore complete solutions.
+Type `YES` when asked. Only **starter** contains the two numbered TODO placeholders; the default sources and solution checkpoints are complete.
 Checkpoint selection replaces only the two route files and two application property files. Save your edits first.
-Rebuild with `bash mvnw package`, then restart the apps after any edit.
+Rebuild with `bash mvnw clean package`, then restart the apps after any edit.
 
 Read [facilitator notes](docs/facilitator.md) for timing, expected stock values, troubleshooting and transaction explanation.
 
@@ -70,15 +92,14 @@ Read [facilitator notes](docs/facilitator.md) for timing, expected stock values,
 
 | File | Purpose |
 | --- | --- |
-| `app-a/.../SendStock.java` | REST request and event ID |
-| `app-a/.../SendRoute.java` | Object -> JSON -> JMS |
-| `app-b/.../StockRoute.java` | JMS -> JSON -> SQL method |
-| `app-b/.../StockDatabase.java` | Two SQL statements and the deliberate failure |
-| `app-b/.../StockPage.java` | Read stock for the page |
+| `app-a/.../SendRoute.java` | Camel REST POST -> validate -> JSON -> JMS -> HTTP 202 |
+| `app-b/.../StockRoute.java` | JMS -> JSON -> Camel SQL insert/update -> deliberate failure |
+| `app-b/.../StockPage.java` | Camel REST GET -> Camel SQL -> JSON response |
+| `app-b/src/main/resources/stock.sql` | One consistent stock/event snapshot for the page |
 | Each `META-INF/resources/index.html` | Plain browser controls and `fetch` |
 
 `app-b/.../setup/JmsSetup.java`, the lower half of its properties and `infra/` are supplied infrastructure.
-Do not expand them into participant coding exercises. There is deliberately no shared Java module just to share a three-field record.
+Do not expand them into participant coding exercises. There are no JAX-RS resource classes or hand-written JDBC connections in the apps.
 
 ## Facilitator verification
 
@@ -86,8 +107,9 @@ Stop all apps. Tests use and reset **these workshop queues and databases**, so d
 Select the queue or topic solution, build, and leave the containers running:
 
 ```bash
-bash mvnw -B package
+bash mvnw -B clean package
 bash mvnw -B -f verification/pom.xml test
+bash verification/scripts-test.sh
 ```
 
 The separate verification project starts/stops the packaged apps and checks successful commit, invalid input,

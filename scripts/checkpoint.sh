@@ -9,4 +9,9 @@ cp "checkpoints/$checkpoint/SendRoute.java.txt" app-a/src/main/java/workshop/Sen
 cp "checkpoints/$checkpoint/StockRoute.java.txt" app-b/src/main/java/workshop/StockRoute.java
 cp "checkpoints/$checkpoint/app-a.properties" app-a/src/main/resources/application.properties
 cp "checkpoints/$checkpoint/app-b.properties" app-b/src/main/resources/application.properties
-echo "Loaded $checkpoint. Now run: bash mvnw package"
+if [[ "$checkpoint" == starter ]]; then
+  echo 'Loaded starter: find TODO 1 in SendRoute.java and TODO 2 in StockRoute.java.'
+else
+  echo "Loaded $checkpoint: completed solution, with no TODO placeholders."
+fi
+echo 'After editing, build before running: bash mvnw clean package'

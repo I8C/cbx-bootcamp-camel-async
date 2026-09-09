@@ -1,40 +1,31 @@
 package workshop;
 
-import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.rest.RestBindingMode;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import javax.sql.DataSource;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-@Path("/stock")
-public class StockPage {
-    @Inject DataSource database;
+@ApplicationScoped
+public class StockPage extends RouteBuilder {
     @ConfigProperty(name = "stock.instance") String instance;
     public record Stock(String instance, int quantity, List<String> events) {}
 
-    @GET
-    @Produces("application/json")
-    public Stock read() throws SQLException {
-        try (var connection = database.getConnection()) {
-            connection.setAutoCommit(false);
-            connection.setTransactionIsolation(java.sql.Connection.TRANSACTION_REPEATABLE_READ);
-            int quantity;
-            var events = new ArrayList<String>();
-            try (var query = connection.prepareStatement("SELECT quantity FROM stock WHERE id = 1");
-                 var rows = query.executeQuery()) {
-                rows.next();
-                quantity = rows.getInt(1);
-            }
-            try (var query = connection.prepareStatement("SELECT id FROM events ORDER BY sequence DESC LIMIT 10");
-                 var rows = query.executeQuery()) {
-                while (rows.next()) events.add(rows.getString(1));
-            }
-            connection.commit();
-            return new Stock(instance, quantity, events);
-        }
+    @Override
+    @SuppressWarnings("unchecked")
+    public void configure() {
+        restConfiguration().component("platform-http").bindingMode(RestBindingMode.json);
+        rest("/stock").get().produces("application/json").outType(Stock.class).to("direct:stock");
+
+        from("direct:stock")
+            .to("sql:classpath:stock.sql")
+            .process(exchange -> {
+                List<Map<String, Object>> rows = exchange.getMessage().getBody(List.class);
+                int quantity = ((Number) rows.getFirst().get("quantity")).intValue();
+                var ids = rows.stream().map(row -> (String) row.get("id")).filter(Objects::nonNull).toList();
+                exchange.getMessage().setBody(new Stock(instance, quantity, ids));
+            });
     }
 }
