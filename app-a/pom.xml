@@ -1,0 +1,13 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>workshop</groupId><artifactId>stock-workshop</artifactId><version>1.0.0</version></parent>
+  <artifactId>app-a</artifactId>
+  <dependencies>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-rest-jackson</artifactId></dependency>
+    <dependency><groupId>org.apache.camel.quarkus</groupId><artifactId>camel-quarkus-direct</artifactId></dependency>
+    <dependency><groupId>org.apache.camel.quarkus</groupId><artifactId>camel-quarkus-jackson</artifactId></dependency>
+    <dependency><groupId>org.apache.camel.quarkus</groupId><artifactId>camel-quarkus-jms</artifactId></dependency>
+    <dependency><groupId>io.quarkiverse.artemis</groupId><artifactId>quarkus-artemis-jms</artifactId></dependency>
+  </dependencies>
+  <build><plugins><plugin><groupId>io.quarkus</groupId><artifactId>quarkus-maven-plugin</artifactId></plugin></plugins></build>
+</project>

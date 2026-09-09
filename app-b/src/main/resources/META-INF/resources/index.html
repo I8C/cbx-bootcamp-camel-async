@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>App B - Stock view</title>
+<h1>App B: <span id="instance">connecting...</span></h1>
+<p>Cardboard boxes in stock: <strong id="quantity">?</strong></p>
+<p>Last 10 committed event IDs (newest first):</p>
+<pre id="events"></pre>
+<p id="status" role="status"></p>
+<script>
+async function refresh() {
+  try {
+    const response = await fetch('/stock', {cache: 'no-store'});
+    if (!response.ok) throw new Error('Cannot read stock');
+    const stock = await response.json();
+    document.querySelector('#instance').textContent = stock.instance;
+    document.querySelector('#quantity').textContent = stock.quantity;
+    document.querySelector('#events').textContent = stock.events.join('\n') || '(none yet)';
+    document.querySelector('#status').textContent = 'Connected';
+  } catch (error) {
+    document.querySelector('#status').textContent = 'Disconnected - displayed values may be stale';
+  }
+  setTimeout(refresh, 1000);
+}
+refresh();
+</script>
+</html>

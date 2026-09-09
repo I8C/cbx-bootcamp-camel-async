@@ -1,0 +1,19 @@
+package workshop;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.dataformat.JsonLibrary;
+
+@ApplicationScoped
+public class StockRoute extends RouteBuilder {
+    @Inject StockDatabase stock;
+
+    @Override
+    public void configure() {
+        errorHandler(noErrorHandler()); // Artemis owns retries and the DLQ.
+        from("{{stock.source}}")
+            .unmarshal().json(JsonLibrary.Jackson, StockDatabase.Event.class)
+            .process(exchange -> { throw new IllegalStateException("TODO: apply the event"); });
+    }
+}
