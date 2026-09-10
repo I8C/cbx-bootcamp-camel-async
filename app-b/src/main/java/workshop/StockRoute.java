@@ -10,7 +10,8 @@ public class StockRoute extends RouteBuilder {
     public void configure() {
         errorHandler(noErrorHandler()); // Artemis owns retries and the DLQ.
         from("{{stock.source}}")
-            .unmarshal().json(JsonLibrary.Jackson)
+            .unmarshal()
+            .json(JsonLibrary.Jackson)
             .setHeader("id", simple("${body[id]}"))
             .setHeader("change", simple("${body[change]}"))
             .setHeader("fail", simple("${body[fail]}"))
@@ -18,7 +19,8 @@ public class StockRoute extends RouteBuilder {
             // TODO 2: replace the next line with the SQL update from the guide.
             .throwException(IllegalStateException.class, "TODO 2: update stock")
             .log("SQL executed for ${header.id}; fail=${header.fail}")
-            .choice().when(header("fail").isEqualTo(true))
+            .choice()
+            .when(header("fail").isEqualTo(true))
                 .throwException(IllegalStateException.class, "Workshop failure after SQL; roll back!")
             .end();
     }

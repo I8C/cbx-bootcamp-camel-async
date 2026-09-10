@@ -8,8 +8,13 @@ import org.apache.camel.model.rest.RestBindingMode;
 public class StockRest extends RouteBuilder {
     @Override
     public void configure() {
-        restConfiguration().component("platform-http").bindingMode(RestBindingMode.json);
-        rest("/stock").get().produces("application/json")
-            .outType(StockPage.Stock.class).to("direct:stock");
+        restConfiguration()
+            .component("platform-http")
+            .bindingMode(RestBindingMode.json);
+        rest("/stock")
+            .get()
+            .produces("application/json")
+            .outType(StockPage.Stock.class)
+            .to("direct:stock");
     }
 }

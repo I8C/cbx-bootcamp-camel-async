@@ -13,14 +13,16 @@ public class SendRoute extends RouteBuilder {
 
     @Override
     public void configure() {
-        onException(IllegalArgumentException.class).handled(true)
+        onException(IllegalArgumentException.class)
+            .handled(true)
             .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
             .setBody(constant("Enter a non-zero whole number between -1000 and 1000."));
 
         from("direct:send")
             .process(this::createEvent)
             .setProperty("event", body())
-            .marshal().json(JsonLibrary.Jackson)
+            .marshal()
+            .json(JsonLibrary.Jackson)
             // TODO 1: replace the next line with the JMS send from the guide.
             .throwException(IllegalStateException.class, "TODO 1: send to JMS")
             .setBody(exchangeProperty("event"))

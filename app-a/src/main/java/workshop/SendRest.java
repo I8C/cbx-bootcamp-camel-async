@@ -8,9 +8,16 @@ import org.apache.camel.model.rest.RestBindingMode;
 public class SendRest extends RouteBuilder {
     @Override
     public void configure() {
-        restConfiguration().component("platform-http").bindingMode(RestBindingMode.json)
+        restConfiguration()
+            .component("platform-http")
+            .bindingMode(RestBindingMode.json)
             .clientRequestValidation(true);
-        rest("/changes").post().consumes("application/json").produces("application/json")
-            .type(SendRoute.Input.class).outType(SendRoute.Event.class).to("direct:send");
+        rest("/changes")
+            .post()
+            .consumes("application/json")
+            .produces("application/json")
+            .type(SendRoute.Input.class)
+            .outType(SendRoute.Event.class)
+            .to("direct:send");
     }
 }
