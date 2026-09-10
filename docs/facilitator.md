@@ -1,5 +1,28 @@
 # Facilitator notes
 
+Use the [participant guide](participant-guide.md) as the single sequence for prerequisites, setup and exercises.
+Ask everyone to complete its preparation section before session 1. The session's initial queue checkpoint and
+reset restore the expected baseline after any rehearsal.
+
+## Verify before participants arrive
+
+Complete participant preparation first. Stop all Java apps; these checks reset the workshop queues and databases.
+Run them outside the participant sessions:
+
+```bash
+bash scripts/checkpoint.sh queue
+bash scripts/containers.sh up -d
+bash mvnw clean package
+bash mvnw -B -f verification/pom.xml test
+bash verification/scripts-test.sh
+```
+
+Type `YES` at the checkpoint prompt. Wait for Artemis to be active and PostgreSQL to be healthy before running tests.
+The verification project starts/stops packaged apps and checks commit, invalid input, rollback, three attempts,
+DLQ, buffering, competing consumers, multicast copies and subscriber catch-up. Logs are in `verification/target/`.
+See [verification status](verification.md) for the checks performed and their limits.
+After verification, follow session 1's opening checkpoint/reset sequence; do not send extra demonstration events before the guided edits.
+
 ## Keep the workshop small
 
 Ten individual local installations; two sessions of 60 minutes. Allow setup time before the sessions.

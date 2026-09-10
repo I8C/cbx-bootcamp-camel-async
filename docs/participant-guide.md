@@ -1,19 +1,108 @@
 # Participant guide
 
-Use Git Bash in the workshop folder. Installation and image downloads happen before these sessions.
-Keep App A and B1 in separate terminals. Each browser page talks only to its own backend.
+Follow this guide in order. Complete preparation before the two timed sessions.
+
+## Before the workshop: prepare your computer
+
+### 1. Install the tools and get the workshop
+
+Install Git with Git Bash, JDK 21, and Docker Desktop **or** Podman with a working Compose provider.
+
+* download Git-bash from https://git-scm.com/downloads,  
+  use the default installation option  
+  and open it to execute the next commands.
+* install JDK 21: 
+    ```bash
+    curl -s "https://get.sdkman.io" | bash
+    sdk install java 21-tem
+    source "$HOME/.sdkman/bin/sdkman-init.sh“
+    ```
+
+An editor is enough; an IDE is optional. Obtain this repository from the facilitator and open Git Bash
+in its root folder (the folder containing `README.md`, `mvnw` and `compose.yaml`).
+All commands in this guide run from that folder. Maven 3.9.11 is downloaded by the supplied Maven Wrapper;
+you do not need a separate Maven installation.
+
+Set `JAVA_HOME` to your JDK 21 directory and put `$JAVA_HOME/bin` first on `PATH` if Java 21 is not already selected.
+Find where java was installed with SDKMan run in Git-bash: `sdk home java 21-tem`.  
+Start your container engine. Podman users on Windows must also start their Podman machine.
+Ports 8080, 8081, 8082, 8161, 61616 and 5432 must be available.
+
+### 2. Check tools and download dependencies
+
+Podman users: run this in each Git Bash terminal used for container commands, checks or resets:
+
+```bash
+export CONTAINER_ENGINE=podman
+```
+
+Docker is the default. Then run:
+
+```bash
+bash scripts/check.sh
+bash scripts/containers.sh pull
+bash mvnw clean package
+```
+
+The check must succeed, and both its Java and Maven version output must report Java 21.
+Wait for **BUILD SUCCESS**. Downloads can take several minutes; resolve installation or proxy issues
+with the facilitator before the session.
+
+### 3. Check infrastructure readiness
+
+```bash
+bash scripts/containers.sh up -d
+bash scripts/containers.sh logs --tail 20 artemis
+bash scripts/containers.sh ps
+```
+
+Wait for `Server is now active` in the Artemis log and a healthy PostgreSQL container.
+Repeat the log/status commands if needed. Preparation is complete; stock changes begin in session 1.
+You may leave containers running or preserve them with `bash scripts/containers.sh stop` until the session.
+
+### Commands used during the exercises
+
+Keep each Java app in its own Git Bash terminal. Stop it with Ctrl+C. Each browser page talks only to its own backend.
 
 **Build before run:** from the workshop folder, run `bash mvnw clean package` and wait for **BUILD SUCCESS**.
 Then use `bash scripts/run.sh a`, `b1` or `b2` in separate terminals. The run script checks the package; it does not compile.
 Rebuild after every source, UI, SQL, property or checkpoint change. Simply stopping/restarting an unchanged app needs no rebuild.
 
+`containers.sh` forwards Compose commands such as `up -d`, `stop`, `down` and `version`.
+`stop` preserves containers and data; `down` removes containers but preserves named volumes.
+Use `bash scripts/containers.sh --help` for usage. Container commands do not build Java.
+
+`reset.sh` deletes this workshop's broker/database data and XA logs, then starts fresh containers.
+Stop all Java apps first and type `RESET` when prompted. Wait for infrastructure readiness as above afterwards.
+`checkpoint.sh` replaces two route files and two property files; save any edits you want to keep and type `YES` when prompted.
+Only `starter` has TODO placeholders; `queue` and `topic` are solutions. Rebuild after loading any checkpoint.
+
 ## Session 1: queue, transaction, DLQ (60 minutes)
 
 ### 0–10: trace one message
 
-The initial checkout is the **completed queue solution**, so you can first see it work. Start infrastructure with
-`bash scripts/containers.sh up -d`, build with `bash mvnw clean package`, then run A and B1 in separate terminals.
-Open App A on port 8080 and B1 on 8081. Point to the sender, broker, consumer, database and browser.
+Prepare a known starting point, including if you previously tried the examples. Stop all Java apps, then run:
+
+```bash
+bash scripts/checkpoint.sh queue
+bash scripts/reset.sh
+bash mvnw clean package
+```
+
+Confirm the prompts as described above. Wait for infrastructure readiness and **BUILD SUCCESS**, then start the
+completed queue solution in two separate terminals:
+
+```bash
+# Terminal 1
+bash scripts/run.sh a
+# Terminal 2
+bash scripts/run.sh b1
+```
+
+Open [App A](http://localhost:8080) and [B1](http://localhost:8081).
+[B2](http://localhost:8082) is used in session 2, started with `bash scripts/run.sh b2` in a third terminal.
+The [Artemis console](http://localhost:8161/console) uses username `workshop` and password `workshop`.
+Point to the sender, broker, consumer, database and browser.
 Stock starts at 100. App A sends a **change**, not the final stock value.
 The JavaScript only sends a REST request or reads a REST response; it never connects to JMS.
 Both endpoints use Camel REST DSL, and the database steps use Camel SQL.
