@@ -21,7 +21,7 @@ Verified on 9 September 2026 on Windows 11 with Temurin Java 21, Git Bash, Maven
 | No duplicate local JMS commit / closed-session warnings | Passed |
 | Guide quotes exact starter placeholders and replacement lines | Passed |
 | Queue/topic route snapshots agree | Passed |
-| Container command/argument forwarding for Docker and Podman | Passed with command stubs |
+| Container command/argument forwarding for Docker Compose | Passed with command stubs |
 | Missing/stale build rejection and instance selection in run.sh | Passed with disposable files and command stubs |
 | All checkpoint copies and numbered starter TODOs | Passed |
 | Browser form sends +10; stock page changes from 100 to 110 | Passed before Camel REST migration; unchanged HTML |
@@ -36,8 +36,8 @@ The separate `bash verification/scripts-test.sh` checks also passed. Actual Dock
 The migrated endpoints were checked over HTTP; the browser was not re-tested after this change.
 The explicit Spring JTA manager controls receive and commit; local JMS transactions must not also be enabled.
 
-Podman is not installed on this machine, so its runtime was **not tested**. The scripts select `podman compose`
-when `CONTAINER_ENGINE=podman`; a working Compose provider and Podman machine are prerequisites on Windows.
+Podman is intentionally unsupported for this workshop because its Windows networking can fail with `netavark` or
+`nftables` before the workshop containers start. Use Docker Desktop.
 Crash recovery configuration is supplied, but abrupt-crash/XA recovery testing is outside the verified workshop scenarios.
 Some extension deprecation/recorder warnings appear at build time; they do not prevent the tested applications from starting.
 

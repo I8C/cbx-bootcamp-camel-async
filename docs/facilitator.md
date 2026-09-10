@@ -87,9 +87,7 @@ Click the message ID to see the JSON body. Its event ID matches App A; the broke
 
 - **Wrong Java:** both `java -version` and `bash mvnw -version` must show 21. Set `JAVA_HOME` and `PATH` in Git Bash.
 - **Maven download/proxy:** pre-download before the workshop; use the organisation's normal Maven proxy configuration when needed.
-- **Docker/Podman unavailable:** start the engine (and Podman machine on Windows); check `docker info` or `podman info`.
-- **Podman Compose:** a Compose provider must be installed; `podman compose version` must work before the session.
-- **Podman `netavark` / `nftables` error:** this is Podman machine networking, before workshop containers start. Have the participant run `podman machine stop`, `podman machine start`, `podman info`, then retry. If it persists, use Docker Desktop in a new terminal after `unset CONTAINER_ENGINE`; do not switch engines during an exercise.
+- **Docker Desktop unavailable:** start Docker Desktop and check `docker info`. Podman is not supported for this workshop because its Windows networking can fail with `netavark` or `nftables` before the workshop containers start.
 - **Container paths rewritten by Git Bash:** use the supplied container script, which disables MSYS path conversion for container arguments.
 - **Address already in use:** ports 8080, 8081, 8082, 8161, 61616 and 5432 are required. Stop the conflicting local service before class.
 - **Consumer does not start:** check Artemis is live and PostgreSQL is healthy. Read the first startup error, not just later retries.

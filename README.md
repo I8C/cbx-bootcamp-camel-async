@@ -17,7 +17,8 @@ App B: browser <- Camel REST <- Camel SQL      |
 
 Session 1 introduces queues, buffering, transaction rollback, retries and the dead-letter queue.
 Session 2 demonstrates diverging stock views with a shared queue, then multicast subscriptions and offline catch-up.
-The stack is Java 21, Quarkus, Apache Camel, JMS, Artemis and PostgreSQL, with Docker or Podman Compose.
+The stack is Java 21, Quarkus, Apache Camel, JMS, Artemis and PostgreSQL, with Docker Desktop.
+Podman is not supported for this workshop because its Windows network setup can fail before the containers start.
 
 ## Start here
 

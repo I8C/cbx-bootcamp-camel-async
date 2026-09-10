@@ -7,5 +7,5 @@ echo "$version"
 git --version
 bash mvnw -version
 bash scripts/containers.sh version
-"${CONTAINER_ENGINE:-docker}" info >/dev/null
-echo 'Tools found. Use Java 21. Build and pull images before the workshop.'
+docker info >/dev/null
+echo 'Tools found. Use Java 21 and Docker Desktop. Build and pull images before the workshop.'

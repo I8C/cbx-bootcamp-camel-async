@@ -6,7 +6,7 @@ Follow this guide in order. Complete preparation before the two timed sessions.
 
 ### 1. Install the tools and get the workshop
 
-Install Git with Git Bash, JDK 21, and Docker Desktop **or** Podman with a working Compose provider.
+Install Git with Git Bash, JDK 21 and Docker Desktop.
 
 * download Git-bash from https://git-scm.com/downloads,  
   use the default installation option  
@@ -26,18 +26,15 @@ you do not need a separate Maven installation.
 
 Set `JAVA_HOME` to your JDK 21 directory and put `$JAVA_HOME/bin` first on `PATH` if Java 21 is not already selected.
 Find where java was installed with SDKMan run in Git-bash: `sdk home java 21-tem`.  
-Start your container engine. Podman users on Windows must also start their Podman machine.
+Start Docker Desktop and wait until it reports that the engine is running.
 Ports 8080, 8081, 8082, 8161, 61616 and 5432 must be available.
+
+This is a Docker Desktop workshop. Podman is not supported because its Windows network setup can fail with
+`netavark` or `nftables` errors before Artemis and PostgreSQL start.
 
 ### 2. Check tools and download dependencies
 
-Podman users: run this in each Git Bash terminal used for container commands, checks or resets:
-
-```bash
-export CONTAINER_ENGINE=podman
-```
-
-Docker is the default. Then run:
+Then run:
 
 ```bash
 bash scripts/check.sh
@@ -60,22 +57,6 @@ bash scripts/containers.sh ps
 Wait for `Server is now active` in the Artemis log and a healthy PostgreSQL container.
 Repeat the log/status commands if needed. Preparation is complete; stock changes begin in session 1.
 You may leave containers running or preserve them with `bash scripts/containers.sh stop` until the session.
-
-### Podman network recovery
-
-If Podman reports `netavark` or `nftables` while starting the network, the failure is in the Podman machine,
-before either workshop container starts. Restart the machine and try the infrastructure readiness commands again:
-
-```bash
-podman machine stop
-podman machine start
-podman info
-bash scripts/containers.sh up -d
-```
-
-If the same network error remains, use Docker Desktop for this workshop instead. Start Docker Desktop, open a new
-Git Bash terminal, run `unset CONTAINER_ENGINE`, then run `bash scripts/reset.sh`. Keep using the same container
-engine for the remainder of the workshop.
 
 ### Commands used during the exercises
 

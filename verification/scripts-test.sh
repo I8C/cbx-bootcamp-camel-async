@@ -19,7 +19,6 @@ cat > "$testdir/bin/docker" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$@" > "$CAPTURE"
 SH
-cp "$testdir/bin/docker" "$testdir/bin/podman"
 cat > "$testdir/bin/java" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$@" "${INSTANCE:-}" "${HTTP_PORT:-}" "${TX_DIRECTORY:-}" > "$CAPTURE"
@@ -28,20 +27,17 @@ chmod +x "$testdir/bin/"*
 export PATH="$testdir/bin:$PATH"
 cd "$testdir"
 
-for engine in docker podman; do
-  export CONTAINER_ENGINE=$engine
-  for command in up stop down version; do
-    bash scripts/containers.sh "$command"
-    printf '%s\n' compose -f compose.yaml "$command" > expected
-    diff -u expected "$CAPTURE"
-  done
-  bash scripts/containers.sh up -d
-  printf '%s\n' compose -f compose.yaml up -d > expected
-  diff -u expected "$CAPTURE"
-  bash scripts/containers.sh logs --since '1 hour ago' artemis
-  printf '%s\n' compose -f compose.yaml logs --since '1 hour ago' artemis > expected
+for command in up stop down version; do
+  bash scripts/containers.sh "$command"
+  printf '%s\n' compose -f compose.yaml "$command" > expected
   diff -u expected "$CAPTURE"
 done
+bash scripts/containers.sh up -d
+printf '%s\n' compose -f compose.yaml up -d > expected
+diff -u expected "$CAPTURE"
+bash scripts/containers.sh logs --since '1 hour ago' artemis
+printf '%s\n' compose -f compose.yaml logs --since '1 hour ago' artemis > expected
+diff -u expected "$CAPTURE"
 bash scripts/containers.sh > help
 grep -q 'Usage:' help
 
