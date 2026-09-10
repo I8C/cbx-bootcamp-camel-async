@@ -1,8 +1,8 @@
 # Facilitator notes
 
 Use the [participant guide](participant-guide.md) as the single sequence for prerequisites, setup and exercises.
-Ask everyone to complete its preparation section before session 1. The session's initial queue checkpoint and
-reset restore the expected baseline after any rehearsal.
+Ask everyone to complete its preparation section before session 1. Session 1 begins with the starter checkpoint
+and a reset, which restore the expected baseline after any rehearsal.
 
 ## Verify before participants arrive
 
@@ -21,7 +21,7 @@ Type `YES` at the checkpoint prompt. Wait for Artemis to be active and PostgreSQ
 The verification project starts/stops packaged apps and checks commit, invalid input, rollback, three attempts,
 DLQ, buffering, competing consumers, multicast copies and subscriber catch-up. Logs are in `verification/target/`.
 See [verification status](verification.md) for the checks performed and their limits.
-After verification, follow session 1's opening checkpoint/reset sequence; do not send extra demonstration events before the guided edits.
+After verification, follow session 1's opening starter-checkpoint/reset sequence; do not send extra demonstration events before the guided edits.
 
 ## Keep the workshop small
 
@@ -34,7 +34,7 @@ REST DSL is in its own class in each app; JMS consumption stays in `StockRoute`.
 Each `.process(this::methodName)` calls a short method below the route in the same class.
 Do not add an architecture layer, CSS library, product catalogue or generic event system.
 
-Session 1: introduction 10 min, routes/buffering 15, failure 20, recovery 10, recap 5.
+Session 1: connect routes and demonstrate buffering 25 min, failure 20, recovery 10, recap 5.
 Session 2: second consumer 10 min, divergence 15, topic switch 15, catch-up 10, discussion 10.
 If someone falls behind, stop their apps, select the appropriate checkpoint, rebuild and restart.
 
@@ -89,6 +89,7 @@ Click the message ID to see the JSON body. Its event ID matches App A; the broke
 - **Maven download/proxy:** pre-download before the workshop; use the organisation's normal Maven proxy configuration when needed.
 - **Docker/Podman unavailable:** start the engine (and Podman machine on Windows); check `docker info` or `podman info`.
 - **Podman Compose:** a Compose provider must be installed; `podman compose version` must work before the session.
+- **Podman `netavark` / `nftables` error:** this is Podman machine networking, before workshop containers start. Have the participant run `podman machine stop`, `podman machine start`, `podman info`, then retry. If it persists, use Docker Desktop in a new terminal after `unset CONTAINER_ENGINE`; do not switch engines during an exercise.
 - **Container paths rewritten by Git Bash:** use the supplied container script, which disables MSYS path conversion for container arguments.
 - **Address already in use:** ports 8080, 8081, 8082, 8161, 61616 and 5432 are required. Stop the conflicting local service before class.
 - **Consumer does not start:** check Artemis is live and PostgreSQL is healthy. Read the first startup error, not just later retries.

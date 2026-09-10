@@ -11,10 +11,11 @@ Install Git with Git Bash, JDK 21, and Docker Desktop **or** Podman with a worki
 * download Git-bash from https://git-scm.com/downloads,  
   use the default installation option  
   and open it to execute the next commands.
-* install JDK 21: 
+* install JDK 21 with SDKMan: 
     ```bash
     curl -s "https://get.sdkman.io" | bash
-    sdk install java 21-tem
+    sdk install java 21-tem  
+    sdk use java 21-tem
     source "$HOME/.sdkman/bin/sdkman-init.sh“
     ```
 
@@ -60,6 +61,22 @@ Wait for `Server is now active` in the Artemis log and a healthy PostgreSQL cont
 Repeat the log/status commands if needed. Preparation is complete; stock changes begin in session 1.
 You may leave containers running or preserve them with `bash scripts/containers.sh stop` until the session.
 
+### Podman network recovery
+
+If Podman reports `netavark` or `nftables` while starting the network, the failure is in the Podman machine,
+before either workshop container starts. Restart the machine and try the infrastructure readiness commands again:
+
+```bash
+podman machine stop
+podman machine start
+podman info
+bash scripts/containers.sh up -d
+```
+
+If the same network error remains, use Docker Desktop for this workshop instead. Start Docker Desktop, open a new
+Git Bash terminal, run `unset CONTAINER_ENGINE`, then run `bash scripts/reset.sh`. Keep using the same container
+engine for the remainder of the workshop.
+
 ### Commands used during the exercises
 
 Keep each Java app in its own Git Bash terminal. Stop it with Ctrl+C. Each browser page talks only to its own backend.
@@ -75,52 +92,24 @@ Use `bash scripts/containers.sh --help` for usage. Container commands do not bui
 `reset.sh` deletes this workshop's broker/database data and XA logs, then starts fresh containers.
 Stop all Java apps first and type `RESET` when prompted. Wait for infrastructure readiness as above afterwards.
 `checkpoint.sh` replaces two route files and two property files; save any edits you want to keep and type `YES` when prompted.
-Only `starter` has TODO placeholders; `queue` and `topic` are solutions. Rebuild after loading any checkpoint.
+Only `starter` has TODO placeholders. The completed `queue` and `topic` checkpoints are fallbacks described at the end of this guide.
+Rebuild after loading any checkpoint.
 
 ## Session 1: queue, transaction, DLQ (60 minutes)
 
-### 0–10: trace one message
+### 0–25: connect the route
 
-Prepare a known starting point, including if you previously tried the examples. Stop all Java apps, then run:
-
-```bash
-bash scripts/checkpoint.sh queue
-bash scripts/reset.sh
-bash mvnw clean package
-```
-
-Confirm the prompts as described above. Wait for infrastructure readiness and **BUILD SUCCESS**, then start the
-completed queue solution in two separate terminals:
-
-```bash
-# Terminal 1
-bash scripts/run.sh a
-# Terminal 2
-bash scripts/run.sh b1
-```
-
-Open [App A](http://localhost:8080) and [B1](http://localhost:8081).
-[B2](http://localhost:8082) is used in session 2, started with `bash scripts/run.sh b2` in a third terminal.
-The [Artemis console](http://localhost:8161/console) uses username `workshop` and password `workshop`.
-Point to the sender, broker, consumer, database and browser.
-Stock starts at 100. App A sends a **change**, not the final stock value.
-The JavaScript only sends a REST request or reads a REST response; it never connects to JMS.
-Both endpoints use Camel REST DSL, and the database steps use Camel SQL.
-`SendRest.java` forwards the POST to `SendRoute.java`; `StockRest.java` forwards the GET to `StockPage.java`.
-The `direct:` endpoints connect these routes inside each app. REST definitions stay separate from JMS and SQL steps.
-Processor logic is in named methods below the routes: `createEvent` and `createStockResponse`.
-
-### 10–25: connect the route
-
-Stop the apps, then prepare the starter:
+Start with the starter. Stop all Java apps, then prepare fresh workshop data and the two route placeholders:
 
 ```bash
 bash scripts/checkpoint.sh starter
+bash scripts/reset.sh
 ```
 
-Type `YES` at the checkpoint prompt. It copies the starter files into the apps and tells you where **TODO 1** and **TODO 2** are.
+Type `YES`, then `RESET`, at the prompts. Wait for Artemis to be ready again.
+The starter copies the two route placeholders into the apps and tells you where **TODO 1** and **TODO 2** are.
 The supplied REST classes and stock page query are shared by all checkpoints and need no edits.
-If you see completed `.to(...)` steps instead, you are still looking at the queue/topic solution: load `starter` and reopen the source files.
+Both stock databases start at 100.
 
 In `app-a/src/main/java/workshop/SendRoute.java`, find this exact line under **TODO 1**:
 
@@ -157,7 +146,14 @@ bash mvnw clean package
 ```
 
 Restart A and B1 using `bash scripts/run.sh a` and `bash scripts/run.sh b1` in separate terminals.
+Open [App A](http://localhost:8080) and [B1](http://localhost:8081). The [Artemis console](http://localhost:8161/console)
+uses username `workshop` and password `workshop`. B2 is used in session 2.
 Send `10`. B1 becomes **110** and shows the event ID. Match it with App A's confirmation.
+
+Now trace the flow: the browser sends REST to `SendRest`, `direct:send` reaches `SendRoute`, Camel JMS sends
+to Artemis, and `StockRoute` uses Camel SQL to update B1. `StockRest` and `StockPage` read the result for the browser.
+App A sends a **change**, not the final stock value. The JavaScript only sends REST requests and reads REST responses;
+it never connects to JMS. Processor logic is in `createEvent` and `createStockResponse` below their routes.
 
 Stop B1 with Ctrl+C. Send `5`. App A still accepts it. In the broker console, inspect the `stock.work` queue.
 Restart B1: stock becomes **115**. The queue held work while the consumer was offline.
@@ -181,21 +177,20 @@ Do not retry the unchanged DLQ message: its failure flag would make it fail agai
 ### 55–60: recap
 
 Explain in your own words: why does “queued” differ from “processed”? Why did stock stay unchanged on failure?
-Save your two edited route files if you want to keep them. The `queue` checkpoint contains the solution.
+Save your two edited route files if you want to keep them.
 
 ## Session 2: one worker or every subscriber? (60 minutes)
 
 ### 0–10: two independent views
 
-Stop A and B1. Reset and select the queue solution:
+Stop A and B1, then reset the workshop data:
 
 ```bash
 bash scripts/reset.sh
-bash scripts/checkpoint.sh queue
-bash mvnw clean package
 ```
 
-Wait for Artemis, then start A, B1 and B2 in three terminals. Open both B pages: **100 / 100**.
+Wait for Artemis, then start A, B1 and B2 in three terminals. No rebuild is needed because the successful
+session 1 route edits are unchanged. Open both B pages: **100 / 100**.
 They use identical code, but different databases. They represent independent copies of stock.
 
 ### 10–25: observe the wrong pattern for copies
@@ -234,7 +229,7 @@ This avoids writing subscription setup code in the exercise.
 bash mvnw clean package
 ```
 
-Restart A, B1 and B2. If needed, `bash scripts/checkpoint.sh topic` supplies the same solution; rebuild afterwards.
+Restart A, B1 and B2.
 
 ### 40–50: compare and catch up
 
@@ -250,3 +245,25 @@ Restart B2: its durable subscription supplies the missing event, and B2 becomes 
 - Two browsers pointed at the same backend would not demonstrate this distinction. We ran two backends with separate databases.
 
 Stop all Java applications. Use `bash scripts/containers.sh stop` to preserve the exercise, or reset it for the next run.
+
+## If you are stuck: completed checkpoints
+
+The checkpoints are fallbacks, not normal workshop steps. Stop all Java apps first. They replace the two exercise
+route files and their properties, so save any edits you want to keep. Type `YES` at the prompt, then rebuild.
+
+Use the completed queue solution if you are stuck in session 1 or at the start of session 2:
+
+```bash
+bash scripts/checkpoint.sh queue
+bash mvnw clean package
+```
+
+Use the completed topic solution if you are stuck after switching to publish-subscribe in session 2:
+
+```bash
+bash scripts/checkpoint.sh topic
+bash mvnw clean package
+```
+
+If the stock values should return to 100 before continuing, run `bash scripts/reset.sh` after selecting the checkpoint,
+then wait for Artemis and PostgreSQL to be ready. Start the appropriate apps again.
