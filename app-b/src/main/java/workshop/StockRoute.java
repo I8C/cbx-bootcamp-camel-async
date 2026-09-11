@@ -15,6 +15,7 @@ public class StockRoute extends RouteBuilder {
             .setHeader("id", simple("${body[id]}"))
             .setHeader("change", simple("${body[change]}"))
             .setHeader("fail", simple("${body[fail]}"))
+            .log("App B receives ${header.id}; fail=${header.fail}")
             .to("sql:INSERT INTO events (id, change) VALUES (:#id, :#change)")
             // TODO 2: replace the next line with the SQL update from the guide.
             .throwException(IllegalStateException.class, "TODO 2: update stock")

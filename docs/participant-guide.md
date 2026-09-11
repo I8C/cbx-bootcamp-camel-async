@@ -135,6 +135,8 @@ Now trace the flow: the browser sends REST to `SendRest`, `direct:send` reaches 
 to Artemis, and `StockRoute` uses Camel SQL to update B1. `StockRest` and `StockPage` read the result for the browser.
 App A sends a **change**, not the final stock value. The JavaScript only sends REST requests and reads REST responses;
 it never connects to JMS. Processor logic is in `createEvent` and `createStockResponse` below their routes.
+The terminals trace each route with `App A sends a stock change`, `App B receives ...`, `SQL executed ...` and
+`App B reads stock`.
 
 Stop B1 with Ctrl+C. Send `5`. App A still accepts it. In the broker console, inspect the `stock.work` queue.
 Restart B1: stock becomes **115**. The queue held work while the consumer was offline.
@@ -171,7 +173,8 @@ bash scripts/reset.sh
 ```
 
 Wait for Artemis, then start A, B1 and B2 in three terminals. No rebuild is needed because the successful
-session 1 route edits are unchanged. Open both B pages: **100 / 100**.
+session 1 route edits are unchanged. Open [App A](http://localhost:8080), [B1](http://localhost:8081) and
+[B2](http://localhost:8082). Both B pages show **100 / 100**.
 They use identical code, but different databases. They represent independent copies of stock.
 
 ### 10–25: observe the wrong pattern for copies

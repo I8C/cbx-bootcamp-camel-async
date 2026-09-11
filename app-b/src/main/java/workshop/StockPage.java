@@ -16,6 +16,7 @@ public class StockPage extends RouteBuilder {
     @Override
     public void configure() {
         from("direct:stock")
+            .log("App B reads stock")
             .to("sql:classpath:stock.sql")
             .process(this::createStockResponse);
     }

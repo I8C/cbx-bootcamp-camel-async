@@ -20,6 +20,7 @@ public class SendRoute extends RouteBuilder {
 
         from("direct:send")
             .process(this::createEvent)
+            .log("App A sends a stock change")
             .setProperty("event", body())
             .marshal()
             .json(JsonLibrary.Jackson)

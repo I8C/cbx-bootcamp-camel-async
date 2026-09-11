@@ -15,6 +15,7 @@ public class StockRoute extends RouteBuilder {
             .setHeader("id", simple("${body[id]}"))
             .setHeader("change", simple("${body[change]}"))
             .setHeader("fail", simple("${body[fail]}"))
+            .log("App B receives ${header.id}; fail=${header.fail}")
             .to("sql:INSERT INTO events (id, change) VALUES (:#id, :#change)")
             // Exercise 2: update stock with Camel SQL (completed solution).
             .to("sql:UPDATE stock SET quantity = quantity + :#change WHERE id = 1")
